@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jump Game with Retry</title>
+  <style>
+    canvas {
+      border: 1px solid black;
+      background-color: #f4f4f4;
+    }
+    #score {
+      font-family: Arial, sans-serif;
+      font-size: 20px;
+      margin: 10px;
+    }
+    /* Modal styles */
+    #gameOverModal {
+      display: none; 
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.7); /* Black background with transparency */
+    }
+    #modalContent {
+      background-color: #fff;
+      margin: 15% auto;
+      padding: 20px;
+      width: 300px;
+      text-align: center;
+      border-radius: 10px;
+    }
+    #modalContent h2 {
+      margin: 0;
+    }
+    #retryButton {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #retryButton:hover {
+      background-color: #218838;
+    }
+  </style>
+</head>
+<body>
+
+<div id="score">Score: 0</div>
+<canvas id="gameCanvas" width="480" height="320"></canvas>
+
+<!-- Modal for game over -->
+<div id="gameOverModal">
+  <div id="modalContent">
+    <h2>Game Over</h2>
+    <p>Your final score is: <span id="finalScore"></span></p>
+    <button id="retryButton">Retry</button>
+  </div>
+</div>
+
+<script>
+  const canvas = document.getElementById("gameCanvas");
+  const ctx = canvas.getContext("2d");
+  const scoreDisplay = document.getElementById("score");
+  const gameOverModal = document.getElementById("gameOverModal");
+  const finalScoreDisplay = document.getElementById("finalScore");
+  const retryButton = document.getElementById("retryButton");
+  
+  let score = 0;
+  let gameOver = false;
+
+  let player = { x: 50, y: 280, width: 20, height: 20, dy: 0, jumpPower: -10, gravity: 0.5 };
+  let groundHeight = 300;
+  let isJumping = false;
+
+  let block = { x: 480, y: 280, width: 20, height: 20, speed: 3 };
+
+  function drawPlayer() {
+    ctx.fillStyle = "#FF0000";
+    ctx.fillRect(player.x, player.y, player.width, player.height);
+  }
+
+  function drawBlock() {
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(block.x, block.y, block.width, block.height);
+  }
+
+  function updatePlayer() {
+    if (isJumping) {
+      player.dy += player.gravity;
+      player.y += player.dy;
+
+      if (player.y > groundHeight - player.height) {
+        player.y = groundHeight - player.height;
+        player.dy = 0;
+        isJumping = false;
+      }
+    }
+  }
+
+  function updateBlock() {
+    block.x -= block.speed;
+    if (block.x + block.width < 0) {
+      block.x = canvas.width;
+    }
+  }
+
+  function detectCollision() {
+    if (
+      player.x < block.x + block.width &&
+      player.x + player.width > block.x &&
+      player.y < block.y + block.height &&
+      player.y + player.height > block.y
+    ) {
+      endGame();
+    }
+  }
+
+  function endGame() {
+    gameOver = true;
+
+    // Stop the game loop
+    cancelAnimationFrame(gameLoopId);
+
+    // Show the game over modal
+    finalScoreDisplay.textContent = score;
+    gameOverModal.style.display = "block";
+  }
+
+  document.addEventListener("keydown", (e) => {
+    if (e.code === "Space" && !isJumping && !gameOver) {
+      isJumping = true;
+      player.dy = player.jumpPower;
+    }
+  });
+
+  function updateScore() {
+    score++;
+    scoreDisplay.innerHTML = `Score: ${score}`;
+  }
+
+  retryButton.addEventListener("click", function() {
+    resetGame();
+  });
+
+  function resetGame() {
+    // Reset game variables
+    score = 0;
+    player = { x: 50, y: 280, width: 20, height: 20, dy: 0, jumpPower: -10, gravity: 0.5 };
+    block = { x: 480, y: 280, width: 20, height: 20, speed: 3 };
+    gameOver = false;
+    
+    // Hide the game over modal
+    gameOverModal.style.display = "none";
+    
+    // Restart the game loop
+    gameLoop();
+  }
+
+  let gameLoopId;
+
+  function gameLoop() {
+    if (!gameOver) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      drawPlayer();
+      drawBlock();
+      updatePlayer();
+      updateBlock();
+      detectCollision();
+      updateScore();
+
+      // Continue the game loop
+      gameLoopId = requestAnimationFrame(gameLoop);
+    }
+  }
+
+  // Start the game loop
+  gameLoop();
+</script>
+
+</body>
+</html>
