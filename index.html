@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Jump Game with Retry</title>
+  <title>Jump Game with Retry and Click-to-Jump</title>
   <style>
     canvas {
       border: 1px solid black;
@@ -133,11 +133,23 @@
     gameOverModal.style.display = "block";
   }
 
-  document.addEventListener("keydown", (e) => {
-    if (e.code === "Space" && !isJumping && !gameOver) {
+  function jump() {
+    if (!isJumping && !gameOver) {
       isJumping = true;
       player.dy = player.jumpPower;
     }
+  }
+
+  // Jump when the spacebar is pressed
+  document.addEventListener("keydown", (e) => {
+    if (e.code === "Space") {
+      jump();
+    }
+  });
+
+  // Jump when the mouse is clicked anywhere
+  document.addEventListener("click", (e) => {
+    jump();
   });
 
   function updateScore() {
